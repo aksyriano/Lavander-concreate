@@ -1,0 +1,66 @@
+.loginContainer {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-beige);
+}
+
+.loginCard {
+  background: white;
+  padding: 3rem;
+  box-shadow: var(--shadow-hover);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.loginCard h2 {
+  font-family: var(--font-heading);
+  margin-bottom: 0.5rem;
+}
+
+.loginCard p {
+  color: var(--color-text-light);
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.input {
+  padding: 1rem;
+  border: 1px solid #ddd;
+  outline: none;
+  font-family: var(--font-body);
+  transition: border-color 0.3s ease;
+}
+
+.input:focus {
+  border-color: var(--color-black);
+}
+
+.submitBtn {
+  background-color: var(--color-black);
+  color: white;
+  padding: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+
+.submitBtn:hover {
+  background-color: var(--color-gold);
+}
+
+.error {
+  color: red;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  border: 1px solid red;
+  padding: 0.5rem;
+}
