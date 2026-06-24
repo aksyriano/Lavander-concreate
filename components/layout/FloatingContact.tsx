@@ -7,17 +7,7 @@ export default function FloatingContact() {
   const { lang } = useLanguage();
 
   const contacts = [
-    {
-      name: "WhatsApp",
-      tooltip: lang === "ar" ? "تواصل معنا عبر واتساب" : "Chat on WhatsApp",
-      url: "https://wa.me/201020709726",
-      color: "bg-[#25D366] hover:bg-[#20ba5a]",
-      icon: (
-        <svg viewBox="0 0 24 24" className="w-6 h-6 fill-white" aria-hidden="true">
-          <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.455L0 24zm6.59-4.846c1.6.95 3.188 1.449 4.625 1.451 5.403.002 9.803-4.394 9.806-9.799.002-2.592-1.01-5.029-2.848-6.87C16.39 2.093 13.96 1.08 11.378 1.08c-5.406 0-9.81 4.394-9.812 9.799-.001 1.557.399 3.084 1.157 4.46l-.994 3.63 3.738-.979zm11.104-5.07c-.3-.15-1.772-.875-2.046-.975-.276-.1-.477-.15-.677.15-.2.3-.777.975-.951 1.175-.175.2-.35.225-.65.075-.3-.15-1.265-.467-2.41-1.485-.89-.794-1.49-1.775-1.665-2.075-.175-.3-.019-.463.13-.612.135-.133.3-.35.45-.525.15-.175.2-.3.3-.5.1-.2.05-.375-.025-.525-.075-.15-.677-1.632-.927-2.232-.243-.585-.49-.506-.677-.516-.174-.008-.374-.01-.574-.01s-.525.075-.8.375c-.275.3-1.05 1.025-1.05 2.5s1.075 2.9 1.225 3.1c.15.2 2.11 3.224 5.112 4.521.714.309 1.272.494 1.707.633.717.228 1.368.196 1.884.119.575-.085 1.772-.725 2.022-1.425.25-.7.25-1.3.175-1.425-.075-.125-.275-.2-.575-.35z" />
-        </svg>
-      ),
-    },
+
     {
       name: "Facebook",
       tooltip: lang === "ar" ? "تابعنا على فيسبوك" : "Follow us on Facebook",
@@ -67,7 +57,7 @@ export default function FloatingContact() {
           className={`group relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 active:scale-95 ${contact.color}`}
         >
           {contact.icon}
-          
+
           {/* Tooltip */}
           <span className="absolute hidden group-hover:block whitespace-nowrap bg-gray-900/90 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-md transition-all duration-200 -top-10 left-1/2 -translate-x-1/2 z-10">
             {contact.tooltip}
