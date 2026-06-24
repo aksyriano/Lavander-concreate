@@ -1,20 +1,5 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const filePath = path.join(process.cwd(), 'data', 'orders.json');
-
-function getOrders() {
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify([]));
-  }
-  const fileContent = fs.readFileSync(filePath, 'utf8');
-  try {
-    return JSON.parse(fileContent);
-  } catch (err) {
-    return [];
-  }
-}
+import { supabase } from '@/lib/supabase';
 
 export async function PUT(req: Request, { params }: { params: any }) {
   try {
@@ -27,18 +12,37 @@ export async function PUT(req: Request, { params }: { params: any }) {
       return NextResponse.json({ error: 'Status is required' }, { status: 400 });
     }
 
-    const orders = getOrders();
-    const orderIndex = orders.findIndex((o: any) => String(o._id) === String(id));
+    const { data: updatedRow, error } = await supabase
+      .from('orders')
+      .update({ status: status })
+      .eq('id', id)
+      .select()
+      .maybeSingle();
 
-    if (orderIndex === -1) {
+    if (error) {
+      throw error;
+    }
+
+    if (!updatedRow) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    orders[orderIndex].status = status;
-    fs.writeFileSync(filePath, JSON.stringify(orders, null, 2));
+    const mappedOrder = {
+      _id: updatedRow.id,
+      id: updatedRow.id,
+      customer: {
+        name: updatedRow.customer_name,
+        phone: updatedRow.customer_phone,
+        address: updatedRow.customer_address,
+      },
+      products: updatedRow.products || [],
+      totalPrice: Number(updatedRow.total_price),
+      status: updatedRow.status,
+      createdAt: updatedRow.created_at,
+    };
 
-    return NextResponse.json(orders[orderIndex]);
+    return NextResponse.json(mappedOrder);
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message || 'Failed to update order status' }, { status: 500 });
   }
 }

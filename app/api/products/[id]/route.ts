@@ -1,50 +1,73 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const filePath = path.join(process.cwd(), 'data', 'products.json');
-
-function getProducts() {
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify([]));
-  }
-  const fileContent = fs.readFileSync(filePath, 'utf8');
-  try {
-    const products = JSON.parse(fileContent);
-    return products.map((p: any) => ({
-      ...p,
-      _id: p._id || String(p.id),
-      id: p.id || parseInt(p._id) || Math.floor(Math.random() * 1000000),
-      image: p.image || p.images?.[0] || "",
-      images: p.images || (p.image ? [p.image] : []),
-      stock: p.stock !== undefined ? p.stock : 10,
-    }));
-  } catch (err) {
-    return [];
-  }
-}
+import { supabase } from '@/lib/supabase';
 
 export async function GET(req: Request, { params }: { params: any }) {
-  const resolvedParams = await params;
-  const id = resolvedParams.id;
-  const products = getProducts();
-  const product = products.find((p: any) => String(p.id) === String(id) || String(p._id) === String(id));
-  if (!product) {
-    return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+  try {
+    const resolvedParams = await params;
+    const id = resolvedParams.id;
+
+    // Supabase bigint IDs are numeric
+    const numericId = parseInt(id, 10);
+    if (isNaN(numericId)) {
+      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
+    }
+
+    const { data: p, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', numericId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    if (!p) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    const mappedProduct = {
+      id: p.id,
+      _id: String(p.id),
+      name: p.name,
+      price: Number(p.price),
+      description: p.description || "",
+      images: p.images || [],
+      image: p.images?.[0] || "",
+      sizes: p.sizes || [],
+      colors: p.colors || [],
+      category: p.category || "General",
+      stock: p.stock !== undefined ? p.stock : 10,
+      createdAt: p.created_at,
+    };
+
+    return NextResponse.json(mappedProduct);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Failed to fetch product' }, { status: 500 });
   }
-  return NextResponse.json(product);
 }
 
 export async function DELETE(req: Request, { params }: { params: any }) {
   try {
     const resolvedParams = await params;
     const id = resolvedParams.id;
-    const products = getProducts();
-    const filteredProducts = products.filter((p: any) => String(p.id) !== String(id) && String(p._id) !== String(id));
-    
-    fs.writeFileSync(filePath, JSON.stringify(filteredProducts, null, 2));
+
+    const numericId = parseInt(id, 10);
+    if (isNaN(numericId)) {
+      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', numericId);
+
+    if (error) {
+      throw error;
+    }
+
     return NextResponse.json({ success: true });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: err.message || 'Failed to delete product' }, { status: 500 });
   }
 }

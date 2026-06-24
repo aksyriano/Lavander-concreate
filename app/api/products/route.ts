@@ -1,60 +1,77 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
-
-const filePath = path.join(process.cwd(), 'data', 'products.json');
-
-function getProducts() {
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify([]));
-  }
-  const fileContent = fs.readFileSync(filePath, 'utf8');
-  try {
-    const products = JSON.parse(fileContent);
-    return products.map((p: any) => ({
-      ...p,
-      _id: p._id || String(p.id),
-      id: p.id || parseInt(p._id) || Math.floor(Math.random() * 1000000),
-      image: p.image || p.images?.[0] || "",
-      images: p.images || (p.image ? [p.image] : []),
-      stock: p.stock !== undefined ? p.stock : 10,
-    }));
-  } catch (err) {
-    return [];
-  }
-}
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
-  const products = getProducts();
-  return NextResponse.json(products);
+  try {
+    const { data: dbProducts, error } = await supabase
+      .from('products')
+      .select('*')
+      .order('id', { ascending: true });
+
+    if (error) {
+      throw error;
+    }
+
+    const products = (dbProducts || []).map((p: any) => ({
+      id: p.id,
+      _id: String(p.id),
+      name: p.name,
+      price: Number(p.price),
+      description: p.description || "",
+      images: p.images || [],
+      image: p.images?.[0] || "",
+      sizes: p.sizes || [],
+      colors: p.colors || [],
+      category: p.category || "General",
+      stock: p.stock !== undefined ? p.stock : 10,
+      createdAt: p.created_at || new Date().toISOString(),
+    }));
+
+    return NextResponse.json(products);
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Failed to fetch products' }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const products = getProducts();
-    
-    // Generate new unique ID
-    const nextId = products.length > 0 ? Math.max(...products.map((p: any) => p.id)) + 1 : 1;
-    const newProduct = {
-      id: nextId,
-      _id: String(nextId),
-      name: body.name,
-      price: Number(body.price),
-      description: body.description,
-      images: body.images || [],
-      image: body.images?.[0] || "",
-      sizes: body.sizes || [],
-      colors: body.colors || [],
-      category: body.category || "General",
-      stock: body.stock !== undefined ? Number(body.stock) : 10,
-      createdAt: new Date().toISOString(),
+
+    const { data: newRow, error } = await supabase
+      .from('products')
+      .insert({
+        name: body.name,
+        price: Number(body.price),
+        description: body.description,
+        images: body.images || [],
+        sizes: body.sizes || [],
+        colors: body.colors || [],
+        category: body.category || "General",
+        stock: body.stock !== undefined ? Number(body.stock) : 10,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    const mappedProduct = {
+      id: newRow.id,
+      _id: String(newRow.id),
+      name: newRow.name,
+      price: Number(newRow.price),
+      description: newRow.description || "",
+      images: newRow.images || [],
+      image: newRow.images?.[0] || "",
+      sizes: newRow.sizes || [],
+      colors: newRow.colors || [],
+      category: newRow.category || "General",
+      stock: newRow.stock,
+      createdAt: newRow.created_at,
     };
 
-    products.push(newProduct);
-    fs.writeFileSync(filePath, JSON.stringify(products, null, 2));
-
-    return NextResponse.json(newProduct, { status: 201 });
+    return NextResponse.json(mappedProduct, { status: 201 });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Failed to save product' }, { status: 500 });
   }
